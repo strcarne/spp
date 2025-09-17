@@ -117,23 +117,26 @@ app.post("/task/:id", upload.array("attachments"), (req, res) => {
 
   const { title, description, status, dueDate } = req.body;
 
+  // Добавляем новые файлы к существующим
+  const newAttachments = req.files
+    ? req.files.map((file) => ({
+        filename: file.filename,
+        originalname: file.originalname,
+        path: file.path,
+      }))
+    : [];
+
   tasks[taskIndex] = {
     ...tasks[taskIndex],
     title: title,
     description: description,
     status: status,
     dueDate: dueDate,
-    attachments: [
-      ...tasks[taskIndex].attachments,
-      ...req.files.map((file) => ({
-        filename: file.filename,
-        originalname: file.originalname,
-        path: file.path,
-      })),
-    ],
+    attachments: [...tasks[taskIndex].attachments, ...newAttachments],
   };
 
-  res.redirect("/");
+  // Перенаправляем обратно к форме редактирования
+  res.redirect(`/task/${req.params.id}/edit`);
 });
 
 // Удаление задачи
@@ -153,7 +156,7 @@ app.post("/task/:id/delete", (req, res) => {
 
 // Скачивание файлов
 app.get("/download/:filename", (req, res) => {
-  const filename = req.params.filename;
+  const filename = decodeURIComponent(req.params.filename);
   const filePath = path.join(__dirname, "uploads", filename);
 
   if (fs.existsSync(filePath)) {
@@ -165,21 +168,38 @@ app.get("/download/:filename", (req, res) => {
 
 // Удаление прикрепленного файла
 app.post("/task/:id/attachment/:filename/delete", (req, res) => {
-  const taskIndex = tasks.findIndex((t) => t.id === req.params.id);
+  const taskId = req.params.id;
+  const filename = decodeURIComponent(req.params.filename);
+
+  console.log(`Попытка удаления файла: ${filename} для задачи: ${taskId}`);
+
+  const taskIndex = tasks.findIndex((t) => t.id === taskId);
   if (taskIndex !== -1) {
     const attachmentIndex = tasks[taskIndex].attachments.findIndex(
-      (att) => att.filename === req.params.filename
+      (att) => att.filename === filename
     );
 
     if (attachmentIndex !== -1) {
       const attachment = tasks[taskIndex].attachments[attachmentIndex];
+      console.log(`Найден файл для удаления: ${attachment.originalname}`);
+
       if (fs.existsSync(attachment.path)) {
         fs.unlinkSync(attachment.path);
+        console.log(`Файл удален с диска: ${attachment.path}`);
       }
       tasks[taskIndex].attachments.splice(attachmentIndex, 1);
+      console.log(`Файл удален из задачи`);
+    } else {
+      console.log(
+        `Файл не найден в задаче. Доступные файлы:`,
+        tasks[taskIndex].attachments.map((att) => att.filename)
+      );
     }
+  } else {
+    console.log(`Задача не найдена`);
   }
-  res.redirect(`/task/${req.params.id}/edit`);
+
+  res.redirect(`/task/${taskId}/edit`);
 });
 
 app.listen(PORT, () => {
