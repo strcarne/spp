@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Менеджер задач</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <h1 class="header__title">
+                <a href="/">📋 Менеджер задач</a>
+            </h1>
+            <nav class="header__nav">
+                <a href="/" class="nav-link">Все задачи</a>
+                <a href="/task/new" class="nav-link nav-link--primary">Новая задача</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="main">
+        <div class="container">
+            <!-- Фильтры -->
+            <div class="filters">
+                <h2>Фильтр по статусу:</h2>
+                <form method="GET" action="/" class="filter-form">
+                    <select name="filter" onchange="this.form.submit()" class="filter-select">
+                        <option value="all" <%= filter === 'all' ? 'selected' : '' %>>Все задачи</option>
+                        <option value="pending" <%= filter === 'pending' ? 'selected' : '' %>>Ожидают выполнения</option>
+                        <option value="in_progress" <%= filter === 'in_progress' ? 'selected' : '' %>>В процессе</option>
+                        <option value="completed" <%= filter === 'completed' ? 'selected' : '' %>>Завершены</option>
+                    </select>
+                </form>
+            </div>
+
+            <!-- Список задач -->
+            <div class="tasks">
+                <% if (tasks.length === 0) { %>
+                    <div class="empty-state">
+                        <h3>Задач не найдено</h3>
+                        <p>Создайте новую задачу, чтобы начать работу</p>
+                        <a href="/task/new" class="btn btn--primary">Создать задачу</a>
+                    </div>
+                <% } else { %>
+                    <div class="tasks-grid">
+                        <% tasks.forEach(task => { %>
+                            <div class="task-card task-card--<%= task.status %>">
+                                <div class="task-card__header">
+                                    <h3 class="task-card__title"><%= task.title %></h3>
+                                    <span class="task-status task-status--<%= task.status %>">
+                                        <% if (task.status === 'pending') { %>
+                                            ⏳ Ожидает
+                                        <% } else if (task.status === 'in_progress') { %>
+                                            🔄 В процессе
+                                        <% } else if (task.status === 'completed') { %>
+                                            ✅ Завершена
+                                        <% } %>
+                                    </span>
+                                </div>
+                                
+                                <div class="task-card__body">
+                                    <p class="task-card__description"><%= task.description %></p>
+                                    
+                                    <% if (task.dueDate) { %>
+                                        <div class="task-card__due-date">
+                                            📅 Срок: <%= new Date(task.dueDate).toLocaleDateString('ru-RU') %>
+                                        </div>
+                                    <% } %>
+                                    
+                                    <% if (task.attachments && task.attachments.length > 0) { %>
+                                        <div class="task-card__attachments">
+                                            <h4>📎 Прикрепленные файлы:</h4>
+                                            <ul class="attachments-list">
+                                                <% task.attachments.forEach(attachment => { %>
+                                                    <li>
+                                                        <a href="/download/<%= attachment.filename %>" class="attachment-link">
+                                                            <%= attachment.originalname %>
+                                                        </a>
+                                                    </li>
+                                                <% }) %>
+                                            </ul>
+                                        </div>
+                                    <% } %>
+                                </div>
+                                
+                                <div class="task-card__actions">
+                                    <a href="/task/<%= task.id %>/edit" class="btn btn--secondary">Редактировать</a>
+                                    <form method="POST" action="/task/<%= task.id %>/delete" style="display: inline;" onsubmit="return confirm('Вы уверены, что хотите удалить эту задачу?')">
+                                        <button type="submit" class="btn btn--danger">Удалить</button>
+                                    </form>
+                                </div>
+                            </div>
+                        <% }) %>
+                    </div>
+                <% } %>
+            </div>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 Менеджер задач. Лабораторная работа №1</p>
+        </div>
+    </footer>
+</body>
+</html>

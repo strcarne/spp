@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Редактировать задачу - Менеджер задач</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <h1 class="header__title">
+                <a href="/">📋 Менеджер задач</a>
+            </h1>
+            <nav class="header__nav">
+                <a href="/" class="nav-link">Все задачи</a>
+                <a href="/task/new" class="nav-link nav-link--primary">Новая задача</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="main">
+        <div class="container">
+            <div class="form-container">
+                <h2>Редактировать задачу</h2>
+                
+                <form method="POST" action="/task/<%= task.id %>" enctype="multipart/form-data" class="task-form">
+                    <div class="form-group">
+                        <label for="title" class="form-label">Название задачи *</label>
+                        <input type="text" id="title" name="title" required class="form-input" value="<%= task.title %>">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="description" class="form-label">Описание</label>
+                        <textarea id="description" name="description" rows="4" class="form-textarea"><%= task.description %></textarea>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="status" class="form-label">Статус</label>
+                            <select id="status" name="status" class="form-select">
+                                <option value="pending" <%= task.status === 'pending' ? 'selected' : '' %>>⏳ Ожидает выполнения</option>
+                                <option value="in_progress" <%= task.status === 'in_progress' ? 'selected' : '' %>>🔄 В процессе</option>
+                                <option value="completed" <%= task.status === 'completed' ? 'selected' : '' %>>✅ Завершена</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="dueDate" class="form-label">Срок выполнения</label>
+                            <input type="date" id="dueDate" name="dueDate" class="form-input" 
+                                   value="<%= task.dueDate ? task.dueDate.split('T')[0] : '' %>">
+                        </div>
+                    </div>
+                    
+                    <!-- Существующие файлы -->
+                    <% if (task.attachments && task.attachments.length > 0) { %>
+                        <div class="form-group">
+                            <label class="form-label">Прикрепленные файлы</label>
+                            <div class="existing-attachments">
+                                <% task.attachments.forEach(attachment => { %>
+                                    <div class="attachment-item">
+                                        <a href="/download/<%= attachment.filename %>" class="attachment-link">
+                                            📎 <%= attachment.originalname %>
+                                        </a>
+                                        <form method="POST" action="/task/<%= task.id %>/attachment/<%= attachment.filename %>/delete" 
+                                              style="display: inline;" onsubmit="return confirm('Удалить файл?')">
+                                            <button type="submit" class="btn btn--danger btn--small">Удалить</button>
+                                        </form>
+                                    </div>
+                                <% }) %>
+                            </div>
+                        </div>
+                    <% } %>
+                    
+                    <div class="form-group">
+                        <label for="attachments" class="form-label">Добавить файлы</label>
+                        <input type="file" id="attachments" name="attachments" multiple class="form-file">
+                        <small class="form-hint">Можно выбрать несколько файлов</small>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn--primary">Сохранить изменения</button>
+                        <a href="/" class="btn btn--secondary">Отмена</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 Менеджер задач. Лабораторная работа №1</p>
+        </div>
+    </footer>
+</body>
+</html>
