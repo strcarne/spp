@@ -328,6 +328,23 @@ body {
   font-size: 0.75rem;
 }
 
+.btn:disabled,
+.btn--disabled {
+  background-color: var(--color-gray) !important;
+  color: #9ca3af !important;
+  cursor: not-allowed !important;
+  opacity: 0.6;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+.btn:disabled:hover,
+.btn--disabled:hover {
+  background-color: var(--color-gray) !important;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
 /* Формы */
 .form-container {
   max-width: 600px;

@@ -79,7 +79,7 @@
                     </div>
                     
                     <div class="form-actions">
-                        <button type="submit" class="btn btn--primary">Сохранить изменения</button>
+                        <button type="submit" id="saveButton" class="btn btn--primary" disabled>Сохранить изменения</button>
                         <a href="/" class="btn btn--secondary">Вернуться к списку</a>
                     </div>
                 </form>
@@ -105,9 +105,17 @@
     </div>
 
     <script>
+        // Хранилище для исходных значений формы
+        let originalFormData = {};
+        let hasFileChanges = false;
+
         // Функция удаления файла
         function deleteAttachment(taskId, filename, originalname) {
             if (confirm(`Удалить файл ${originalname}?`)) {
+                // Помечаем, что есть изменения (удаление файла)
+                hasFileChanges = true;
+                checkFormChanges();
+                
                 // Создаем скрытую форму для отправки POST запроса
                 const form = document.createElement('form');
                 form.method = 'POST';
@@ -115,6 +123,72 @@
                 document.body.appendChild(form);
                 form.submit();
             }
+        }
+
+        // Функция сохранения исходных значений формы
+        function saveOriginalFormData() {
+            const form = document.querySelector('.task-form');
+            const formData = new FormData(form);
+            
+            originalFormData = {
+                title: document.getElementById('title').value,
+                description: document.getElementById('description').value,
+                status: document.getElementById('status').value,
+                dueDate: document.getElementById('dueDate').value
+            };
+        }
+
+        // Функция проверки изменений в форме
+        function checkFormChanges() {
+            const saveButton = document.getElementById('saveButton');
+            
+            // Проверяем изменения в полях
+            const currentData = {
+                title: document.getElementById('title').value,
+                description: document.getElementById('description').value,
+                status: document.getElementById('status').value,
+                dueDate: document.getElementById('dueDate').value
+            };
+            
+            // Проверяем, есть ли новые файлы
+            const fileInput = document.getElementById('attachments');
+            const hasNewFiles = fileInput && fileInput.files.length > 0;
+            
+            // Сравниваем значения
+            const hasChanges = 
+                currentData.title !== originalFormData.title ||
+                currentData.description !== originalFormData.description ||
+                currentData.status !== originalFormData.status ||
+                currentData.dueDate !== originalFormData.dueDate ||
+                hasNewFiles ||
+                hasFileChanges;
+            
+            // Включаем/отключаем кнопку
+            if (hasChanges) {
+                saveButton.disabled = false;
+                saveButton.classList.remove('btn--disabled');
+            } else {
+                saveButton.disabled = true;
+                saveButton.classList.add('btn--disabled');
+            }
+        }
+
+        // Функция добавления обработчиков событий
+        function addFormChangeListeners() {
+            const fields = ['title', 'description', 'status', 'dueDate', 'attachments'];
+            
+            fields.forEach(fieldId => {
+                const field = document.getElementById(fieldId);
+                if (field) {
+                    // Разные события для разных типов полей
+                    if (field.type === 'file') {
+                        field.addEventListener('change', checkFormChanges);
+                    } else {
+                        field.addEventListener('input', checkFormChanges);
+                        field.addEventListener('change', checkFormChanges);
+                    }
+                }
+            });
         }
 
         // Функция создания конфетти
@@ -159,6 +233,10 @@
             const fileInput = document.getElementById('attachments');
             const urlParams = new URLSearchParams(window.location.search);
             
+            // Инициализируем отслеживание изменений формы
+            saveOriginalFormData();
+            addFormChangeListeners();
+            
             // Проверяем, есть ли параметр success в URL
             if (urlParams.get('success') === 'true') {
                 setTimeout(() => {
@@ -166,6 +244,11 @@
                     // Убираем параметр из URL без перезагрузки страницы
                     const newUrl = window.location.pathname;
                     window.history.replaceState({}, document.title, newUrl);
+                    
+                    // Сбрасываем состояние формы после успешного сохранения
+                    hasFileChanges = false;
+                    saveOriginalFormData();
+                    checkFormChanges();
                 }, 200);
             }
             
@@ -177,6 +260,13 @@
             // Обработчик отправки формы
             if (taskForm) {
                 taskForm.addEventListener('submit', function(e) {
+                    // Проверяем, что форма не заблокирована
+                    const saveButton = document.getElementById('saveButton');
+                    if (saveButton.disabled) {
+                        e.preventDefault();
+                        return false;
+                    }
+                    
                     // Даем форме отправиться, а затем очищаем поле файлов
                     setTimeout(() => {
                         if (fileInput) {
