@@ -93,6 +93,17 @@
         </div>
     </footer>
 
+    <!-- Модальное окно успеха -->
+    <div id="successModal" class="success-modal">
+        <div class="success-modal__content">
+            <div class="confetti" id="confetti"></div>
+            <div class="success-icon"></div>
+            <h3 class="success-title">Успешно!</h3>
+            <p class="success-message">Изменения сохранены</p>
+            <button class="success-close" onclick="closeSuccessModal()">Закрыть</button>
+        </div>
+    </div>
+
     <script>
         // Функция удаления файла
         function deleteAttachment(taskId, filename, originalname) {
@@ -106,10 +117,57 @@
             }
         }
 
-        // Очистка поля выбора файлов после отправки формы
+        // Функция создания конфетти
+        function createConfetti() {
+            const confettiContainer = document.getElementById('confetti');
+            confettiContainer.innerHTML = ''; // Очищаем предыдущее конфетти
+            
+            const colors = ['#dc2626', '#059669', '#fbbf24', '#3b82f6', '#8b5cf6'];
+            
+            for (let i = 0; i < 50; i++) {
+                const confettiPiece = document.createElement('div');
+                confettiPiece.className = 'confetti-piece';
+                confettiPiece.style.left = Math.random() * 100 + '%';
+                confettiPiece.style.animationDelay = Math.random() * 2 + 's';
+                confettiPiece.style.animationDuration = (Math.random() * 2 + 2) + 's';
+                confettiPiece.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                confettiContainer.appendChild(confettiPiece);
+            }
+        }
+
+        // Функция показа модального окна успеха
+        function showSuccessModal() {
+            const modal = document.getElementById('successModal');
+            createConfetti();
+            modal.classList.add('show');
+            
+            // Автоматически закрыть через 4 секунды
+            setTimeout(() => {
+                closeSuccessModal();
+            }, 4000);
+        }
+
+        // Функция закрытия модального окна
+        function closeSuccessModal() {
+            const modal = document.getElementById('successModal');
+            modal.classList.remove('show');
+        }
+
+        // Проверка параметра успеха в URL при загрузке страницы
         document.addEventListener('DOMContentLoaded', function() {
             const taskForm = document.querySelector('.task-form');
             const fileInput = document.getElementById('attachments');
+            const urlParams = new URLSearchParams(window.location.search);
+            
+            // Проверяем, есть ли параметр success в URL
+            if (urlParams.get('success') === 'true') {
+                setTimeout(() => {
+                    showSuccessModal();
+                    // Убираем параметр из URL без перезагрузки страницы
+                    const newUrl = window.location.pathname;
+                    window.history.replaceState({}, document.title, newUrl);
+                }, 200);
+            }
             
             // Очищаем поле файлов при загрузке страницы (после редиректа)
             if (fileInput) {
@@ -127,6 +185,21 @@
                     }, 100);
                 });
             }
+
+            // Закрытие модального окна при клике вне его
+            const modal = document.getElementById('successModal');
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) {
+                    closeSuccessModal();
+                }
+            });
+
+            // Закрытие модального окна при нажатии Escape
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    closeSuccessModal();
+                }
+            });
         });
     </script>
 </body>

@@ -135,8 +135,8 @@ app.post("/task/:id", upload.array("attachments"), (req, res) => {
     attachments: [...tasks[taskIndex].attachments, ...newAttachments],
   };
 
-  // Перенаправляем обратно к форме редактирования
-  res.redirect(`/task/${req.params.id}/edit`);
+  // Перенаправляем обратно к форме редактирования с параметром успеха
+  res.redirect(`/task/${req.params.id}/edit?success=true`);
 });
 
 // Удаление задачи
